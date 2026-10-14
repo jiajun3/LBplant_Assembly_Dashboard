@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>奇瑞生产基地二期总装车间驾驶舱</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/echarts.min.js"></script>
+<style>
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+    background:
+      radial-gradient(1200px 620px at 50% -12%, rgba(24, 88, 180, 0.55), transparent 68%),
+      radial-gradient(900px 520px at 6% 104%, rgba(12, 62, 140, 0.38), transparent 70%),
+      radial-gradient(900px 520px at 96% 104%, rgba(10, 80, 150, 0.3), transparent 70%),
+      #020a1c;
+    background-attachment: fixed;
+  }
+  .scroll-hidden { scrollbar-width: none; -ms-overflow-style: none; }
+  .scroll-hidden::-webkit-scrollbar { width: 0; height: 0; }
+  .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .hide-scrollbar::-webkit-scrollbar { width: 0; height: 0; }
+  @keyframes flow { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -96; } }
+  .flow { animation: flow 2.6s linear infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.18; } }
+  .blink { animation: blink 1.7s ease-in-out infinite; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .rise { animation: rise 0.6s ease-out both; }
+  @keyframes scanline { 0% { background-position: 0 0; } 100% { background-position: 0 24px; } }
+  .video-scan { animation: scanline 3.4s linear infinite; }
+  @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.06); opacity: 1; } }
+  .video-breathe { animation: breathe 2.6s ease-in-out infinite; }
+
+  /* 取消 16:9 锁定：整页随视口自适应，并用受控的最大高度把整体压成「矮的横长方形」观感 */
+  /* 纵向不再裁切：max-height 由 overflow:hidden 改为 auto，三列内容总高超出视口时可正常滚动，不再把卡片压到内容高度以下 */
+  html, body { width: 100%; height: 100%; margin: 0; }
+  body { overflow-x: hidden; overflow-y: auto; }
+  #cockpit-stage {
+    /* 高度交给内容自然决定：至少铺满视口，内容更高时按内容增长，不再用固定高度挤压右列卡片 */
+    min-height: 100%;
+    max-height: none;
+  }
+  /* 统一间距与高度尺度（全页唯一来源）：卡片内距 10px / 模块间距 10px / 标题区上下留白 6px / 分组间距 8px / 数值与标签间距 4px */
+  #cockpit-stage {
+    --pad-card: 10px;
+    --gap-col: 10px;
+    --gap-group: 8px;
+    --gap-tight: 4px;
+    --pad-head: 6px;
+  }
+  /* 卡片统一：内距、圆角内边距节奏一致 */
+  #cockpit-stage section { padding: var(--pad-card); }
+  /* 卡片标题区统一：下方 8px、底部内边距 6px */
+  #cockpit-stage section > div:first-child.sticky-head,
+  #cockpit-stage .card-head { margin-bottom: 8px; padding-bottom: var(--pad-head); }
+  /* 卡片内部卡片（分组框）统一内距 */
+  #cockpit-stage section > .group-box { padding: var(--pad-card); }
+  /* 分组标题与内容区统一间距与内边距 */
+  #cockpit-stage .group-head { margin-bottom: var(--gap-tight); padding-bottom: var(--gap-tight); }
+  #cockpit-stage .group-content { padding-top: var(--gap-tight); margin-top: var(--gap-tight); }
+  /* 模块级工具类：确保三列间距、分组间距同尺度（不写进 Tailwind 非法值） */
+  #cockpit-stage .col-stack { gap: var(--gap-col); }
+  #cockpit-stage .module-gap { margin-top: var(--gap-col); }
+  /* 右列：三张卡各占独立空间，余量仅在卡片之间等分，用纯 CSS 实现底边对齐 */
+  #cockpit-stage .right-col { padding-bottom: 0; }
+  #cockpit-stage .right-fill { flex: 1 1 auto; }
+  #cockpit-stage .right-card { flex: 0 0 auto; }
+</style>
+</head>
+<body class="min-h-screen w-full text-slate-200">
+<div class="flex flex-col" id="cockpit-stage">
+<!-- ===== 顶部栏：品牌 / 标题 / 时间与刷新倒计时 ===== -->
+<header class="relative mx-2 mt-2 flex shrink-0 items-center gap-4 rounded-[10px] border border-[#1d4479] bg-gradient-to-r from-[#061530] via-[#0a2350] to-[#061530] px-5 py-2 shadow-[0_0_20px_rgba(20,80,180,0.35)]">
+<div class="absolute inset-x-8 bottom-0 h-px bg-gradient-to-r from-transparent via-[#3fa9ff] to-transparent"></div>
+<div class="flex shrink-0 items-center gap-3">
+<div class="grid h-10 w-10 place-items-center rounded-md border border-[#2c6bb5] bg-[#0a2350] text-[#5ef0ff] shadow-[0_0_12px_rgba(94,240,255,0.3)]">
+<iconify-icon class="text-[22px]" icon="mdi:car-sports"></iconify-icon>
+</div>
+<div class="leading-tight">
+<div class="text-[15px] font-bold tracking-[0.2em] text-white">CHERY</div>
+<div class="text-[9px] tracking-[0.18em] text-[#6f9dd0]">AUTOMOBILE CO., LTD</div>
+</div>
+</div>
+<h1 class="flex-1 whitespace-nowrap bg-gradient-to-b from-white via-[#b9e6ff] to-[#48a4ff] bg-clip-text text-center text-[15px] font-bold tracking-[0.2em] text-transparent lg:text-[22px]">
+        LB工厂总装车间驾驶舱
+      </h1>
+<div class="flex shrink-0 items-center gap-4">
+<div class="text-right leading-tight">
+<div class="text-[18px] font-semibold tabular-nums text-[#d7f0ff]" id="clock-time">09:21:54</div>
+<div class="text-[10px] tracking-wider text-[#6f9dd0]" id="clock-date">2026-09-20 星期日</div>
+</div>
+<div class="flex items-center gap-1.5 rounded-md border border-[#1d4479] bg-[#081a3a] px-2.5 py-1.5">
+<iconify-icon class="blink text-[14px] text-[#5ef0ff]" icon="mdi:refresh"></iconify-icon>
+<span class="text-[11px] text-[#8fb8e0]">刷新</span>
+<span class="text-[13px] font-bold tabular-nums text-[#5ef0ff]" id="countdown">60</span>
+<span class="text-[11px] text-[#8fb8e0]">s</span>
+</div>
+</div>
+</header>
+<!-- ===== 主体三列 ===== -->
+<main class="grid flex-1 grid-cols-12 content-stretch items-stretch gap-2.5 px-2 pb-2 pt-1">
+<!-- ---------- 左列：交付 ---------- -->
+<div class="col-stack col-span-12 flex min-h-0 flex-col lg:col-span-3">
+<!-- 交付 Delivery -->
+<section class="rise flex min-h-0 flex-1 flex-col overflow-hidden rounded-[10px] border border-[#1c4375] bg-gradient-to-b from-[#0a2450]/85 to-[#05122a]/90 shadow-[inset_0_0_26px_rgba(24,86,180,0.22)]">
+<div class="card-head flex shrink-0 items-center justify-between border-b border-[#163a68]">
+<div class="flex flex-1 items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-[4px] bg-[#113a6e] text-[#5ef0ff]">
+<iconify-icon class="text-[13px]" icon="mdi:truck-fast-outline"></iconify-icon>
+</span>
+<h2 class="text-[13px] font-semibold tracking-[0.14em] text-[#bfe0ff]">交付 · DELIVERY</h2>
+</div>
+</div>
+<div class="group-box group-content flex flex-none flex-col rounded-md border border-[#183f70] bg-[#071933]/80">
+<!-- 分组一：OJ 线（标题行内紧跟计划产量小字；下行 10 点 / 20 点产量） -->
+<div class="group-head flex shrink-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+<span class="self-center h-3 w-[3px] rounded-full bg-[#5ef0ff]"></span>
+<span class="text-[10px] font-semibold tracking-[0.16em] text-[#9fc9ee]">OJ线</span>
+<span class="whitespace-nowrap text-[9px] tracking-wider text-[#4f7ba9]">计划产量：120 台</span>
+<span class="h-px flex-1 self-center bg-gradient-to-r from-[#1c4375] to-transparent"></span>
+<span class="whitespace-nowrap text-[9px] tracking-wider text-[#4f7ba9]">合计 200 台</span>
+</div>
+<div class="group-content grid shrink-0 grid-cols-2 gap-1.5 border-t border-[#123557] pt-1.5">
+<div class="flex flex-col justify-center rounded-[6px] border border-[#1c4375] bg-[#0a2450]/40 px-2 py-0.5 text-center">
+<div class="whitespace-nowrap text-[9px] tracking-wide text-[#6f9dd0]">10点产量</div>
+<div class="mt-0.5 flex items-baseline justify-center gap-1 leading-none">
+<span class="text-[16px] font-bold tabular-nums text-[#5ef0ff]">68</span>
+<span class="text-[9px] text-[#4f7ba9]">台</span>
+</div>
+</div>
+<div class="flex flex-col justify-center rounded-[6px] border border-[#1c4375] bg-[#0a2450]/40 px-2 py-0.5 text-center">
+<div class="whitespace-nowrap text-[9px] tracking-wide text-[#6f9dd0]">20点产量</div>
+<div class="mt-0.5 flex items-baseline justify-center gap-1 leading-none">
+<span class="text-[16px] font-bold tabular-nums text-[#5ef0ff]">98</span>
+<span class="text-[9px] text-[#4f7ba9]">台</span>
+</div>
+</div>
+</div>
+<!-- 分组二：JT 线（标题行内紧跟计划产量小字；下行 10 点 / 20 点产量） -->
+<div class="group-head mt-2 flex shrink-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+<span class="self-center h-3 w-[3px] rounded-full bg-[#22d3a6]"></span>
+<span class="text-[10px] font-semibold tracking-[0.16em] text-[#9fc9ee]">JT线</span>
+<span class="whitespace-nowrap text-[9px] tracking-wider text-[#4f7ba9]">计划产量：80 台</span>
+<span class="h-px flex-1 self-center bg-gradient-to-r from-[#1c4375] to-transparent"></span>
+<span class="whitespace-nowrap text-[9px] tracking-wider text-[#4f7ba9]">单位 台</span>
+</div>
+<div class="group-content grid shrink-0 grid-cols-2 gap-1.5 border-t border-[#123557] pt-1.5">
+<div class="flex flex-col justify-center rounded-[6px] border border-[#1c4375] bg-[#0a2450]/40 px-2 py-0.5 text-center">
+<div class="whitespace-nowrap text-[9px] tracking-wide text-[#6f9dd0]">10点产量</div>
+<div class="mt-0.5 flex items-baseline justify-center gap-1 leading-none">
+<span class="text-[16px] font-bold tabular-nums text-[#5ef0ff]">56</span>
+<span class="text-[9px] text-[#4f7ba9]">台</span>
+</div>
+</div>
+<div class="flex flex-col justify-center rounded-[6px] border border-[#1c4375] bg-[#0a2450]/40 px-2 py-0.5 text-center">
+<div class="whitespace-nowrap text-[9px] tracking-wide text-[#6f9dd0]">20点产量</div>
+<div class="mt-0.5 flex items-baseline justify-center gap-1 leading-none">
+<span class="text-[16px] font-bold tabular-nums text-[#5ef0ff]">76</span>
+<span class="text-[9px] text-[#4f7ba9]">台</span>
+</div>
+</div>
+</div>
+<!-- 30 点产量：保留在两个分组下方，维持通栏汇总样式 -->
+<div class="group-content mt-2 flex shrink-0 items-center justify-between rounded-[6px] border border-[#1c4375] bg-gradient-to-r from-[#0d2c58]/70 to-[#0a2450]/40 px-3 py-1">
+<span class="whitespace-nowrap text-[9px] tracking-wide text-[#6f9dd0]">30点产量</span>
+<span class="flex items-baseline gap-1 leading-none">
+<span class="text-[16px] font-bold tabular-nums text-[#5ef0ff]">124</span>
+<span class="text-[9px] text-[#4f7ba9]">台</span>
+</span>
+</div>
+</div>
+<!-- 分组三：完成率 / 综合开动率（两个小模块左右并排，同一行） -->
+<div class="group-content mt-2 grid shrink-0 grid-cols-2 items-stretch gap-2.5">
+<div class="group-box flex-none rounded-md border border-[#183f70] bg-[#071933]/80">
+<div class="group-head flex shrink-0 items-center gap-1.5 px-2 pt-1.5">
+<span class="h-3 w-[3px] rounded-full bg-[#5ef0ff]"></span>
+<span class="whitespace-nowrap text-[10px] font-semibold tracking-[0.02em] text-[#9fc9ee]">今日生产计划完成率</span>
+<span class="h-px flex-1 bg-gradient-to-r from-[#1c4375] to-transparent"></span>
+<span class="whitespace-nowrap text-[9px] tracking-wider text-[#4f7ba9]">单位 %</span>
+</div>
+<div class="group-content grid shrink-0 grid-cols-2 gap-1.5 border-t border-[#123557] px-2 py-1.5">
+<div class="relative flex min-w-0 flex-col items-center justify-start overflow-hidden rounded-[6px] border border-[#1c4375] bg-gradient-to-b from-[#0d2c5c]/60 to-[#071c3c]/50 px-1 py-1.5 text-center shadow-[inset_0_0_12px_rgba(94,240,255,0.06)]">
+<span class="absolute inset-y-0 left-0 w-[2px] bg-[#5ef0ff]/70"></span>
+<span class="pointer-events-none absolute right-1 top-1 h-[6px] w-[6px] border-r border-t border-[#2f5c92]/70"></span>
+<div class="flex w-full items-baseline justify-center leading-none">
+<span class="whitespace-nowrap text-[9px] font-bold tracking-wide text-[#5ef0ff]">OJ</span>
+</div>
+<div class="relative mt-0.5 h-[38px] w-[38px] shrink-0">
+<svg aria-hidden="true" class="h-full w-full -rotate-90" viewbox="0 0 44 44">
+<defs>
+<lineargradient id="ringGradCmpOj" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0%" stop-color="#8df6ff"></stop>
+<stop offset="100%" stop-color="#18a6d8"></stop>
+</lineargradient>
+<filter height="180%" id="ringBlurCmpOj" width="180%" x="-40%" y="-40%">
+<fegaussianblur stddeviation="1.6"></fegaussianblur>
+</filter>
+</defs>
+<circle cx="22" cy="22" fill="none" r="17.5" stroke="#16355e" stroke-width="3.6"></circle>
+<circle cx="22" cy="22" fill="none" filter="url(#ringBlurCmpOj)" opacity="0.28" r="17.5" stroke="#5ef0ff" stroke-dasharray="79.2 109.96" stroke-linecap="round" stroke-width="3.6"></circle>
+<circle cx="22" cy="22" fill="none" r="17.5" stroke="url(#ringGradCmpOj)" stroke-dasharray="79.2 109.96" stroke-linecap="round" stroke-width="3.6" style="filter: drop-shadow(0 0 2.4px rgba(94,240,255,0.85));"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center leading-none">
+<div class="whitespace-nowrap text-[13px] font-bold tabular-nums tracking-[0.02em] text-[#d6f8ff]">72<span class="ml-[1px] align-top text-[7px] font-semibold text-[#6f9dd0]">%</span></div>
+</div>
+</div>
+</div>
+<div class="relative flex min-w-0 flex-col items-center justify-start overflow-hidden rounded-[6px] border border-[#1c4375] bg-gradient-to-b from-[#0d2c5c]/60 to-[#071c3c]/50 px-1 py-1.5 text-center shadow-[inset_0_0_12px_rgba(94,240,255,0.06)]">
+<span class="absolute inset-y-0 left-0 w-[2px] bg-[#5ef0ff]/70"></span>
+<span class="pointer-events-none absolute right-1 top-1 h-[6px] w-[6px] border-r border-t border-[#2f5c92]/70"></span>
+<div class="flex w-full items-baseline justify-center leading-none">
+<span class="whitespace-nowrap text-[9px] font-bold tracking-wide text-[#5ef0ff]">JT</span>
+</div>
+<div class="relative mt-0.5 h-[38px] w-[38px] shrink-0">
+<svg aria-hidden="true" class="h-full w-full -rotate-90" viewbox="0 0 44 44">
+<defs>
+<lineargradient id="ringGradCmpJt" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0%" stop-color="#8df6ff"></stop>
+<stop offset="100%" stop-color="#18a6d8"></stop>
+</lineargradient>
+<filter height="180%" id="ringBlurCmpJt" width="180%" x="-40%" y="-40%">
+<fegaussianblur stddeviation="1.6"></fegaussianblur>
+</filter>
+</defs>
+<circle cx="22" cy="22" fill="none" r="17.5" stroke="#16355e" stroke-width="3.6"></circle>
+<circle cx="22" cy="22" fill="none" filter="url(#ringBlurCmpJt)" opacity="0.28" r="17.5" stroke="#5ef0ff" stroke-dasharray="70.4 109.96" stroke-linecap="round" stroke-width="3.6"></circle>
+<circle cx="22" cy="22" fill="none" r="17.5" stroke="url(#ringGradCmpJt)" stroke-dasharray="70.4 109.96" stroke-linecap="round" stroke-width="3.6" style="filter: drop-shadow(0 0 2.4px rgba(94,240,255,0.85));"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center leading-none">
+<div class="whitespace-nowrap text-[13px] font-bold tabular-nums tracking-[0.02em] text-[#d6f8ff]">64<span class="ml-[1px] align-top text-[7px] font-semibold text-[#6f9dd0]">%</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="group-box flex-none rounded-md border border-[#183f70] bg-[#071933]/80">
+<div class="group-head flex shrink-0 items-center gap-1.5 px-2 pt-1.5">
+<span class="h-3 w-[3px] rounded-full bg-[#22d3a6]"></span>
+<span class="whitespace-nowrap text-[10px] font-semibold tracking-[0.02em] text-[#9fc9ee]">综合开动率</span>
+<span class="h-px flex-1 bg-gradient-to-r from-[#1c4375] to-transparent"></span>
+<span class="whitespace-nowrap text-[9px] tracking-wider text-[#4f7ba9]">单位 %</span>
+</div>
+<div class="group-content grid shrink-0 grid-cols-2 gap-1.5 border-t border-[#123557] px-2 py-1.5">
+<div class="relative flex min-w-0 flex-col items-center justify-start overflow-hidden rounded-[6px] border border-[#1c4375] bg-gradient-to-b from-[#0d2c5c]/60 to-[#071c3c]/50 px-1 py-1.5 text-center shadow-[inset_0_0_12px_rgba(34,211,166,0.06)]">
+<span class="absolute inset-y-0 left-0 w-[2px] bg-[#22d3a6]/70"></span>
+<span class="pointer-events-none absolute right-1 top-1 h-[6px] w-[6px] border-r border-t border-[#2f5c92]/70"></span>
+<div class="flex w-full items-baseline justify-center leading-none">
+<span class="whitespace-nowrap text-[9px] font-bold tracking-wide text-[#22d3a6]">OJ</span>
+</div>
+<div class="relative mt-0.5 h-[38px] w-[38px] shrink-0">
+<svg aria-hidden="true" class="h-full w-full -rotate-90" viewbox="0 0 44 44">
+<defs>
+<lineargradient id="ringGradRateOj" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0%" stop-color="#7ef7cf"></stop>
+<stop offset="100%" stop-color="#12a37c"></stop>
+</lineargradient>
+<filter height="180%" id="ringBlurRateOj" width="180%" x="-40%" y="-40%">
+<fegaussianblur stddeviation="1.6"></fegaussianblur>
+</filter>
+</defs>
+<circle cx="22" cy="22" fill="none" r="17.5" stroke="#16355e" stroke-width="3.6"></circle>
+<circle cx="22" cy="22" fill="none" filter="url(#ringBlurRateOj)" opacity="0.28" r="17.5" stroke="#22d3a6" stroke-dasharray="98.96 109.96" stroke-linecap="round" stroke-width="3.6"></circle>
+<circle cx="22" cy="22" fill="none" r="17.5" stroke="url(#ringGradRateOj)" stroke-dasharray="98.96 109.96" stroke-linecap="round" stroke-width="3.6" style="filter: drop-shadow(0 0 2.4px rgba(34,211,166,0.85));"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center leading-none">
+<div class="whitespace-nowrap text-[13px] font-bold tabular-nums tracking-[0.02em] text-[#d6f8ff]">90<span class="ml-[1px] align-top text-[7px] font-semibold text-[#6f9dd0]">%</span></div>
+</div>
+</div>
+</div>
+<div class="relative flex min-w-0 flex-col items-center justify-start overflow-hidden rounded-[6px] border border-[#1c4375] bg-gradient-to-b from-[#0d2c5c]/60 to-[#071c3c]/50 px-1 py-1.5 text-center shadow-[inset_0_0_12px_rgba(34,211,166,0.06)]">
+<span class="absolute inset-y-0 left-0 w-[2px] bg-[#22d3a6]/70"></span>
+<span class="pointer-events-none absolute right-1 top-1 h-[6px] w-[6px] border-r border-t border-[#2f5c92]/70"></span>
+<div class="flex w-full items-baseline justify-center leading-none">
+<span class="whitespace-nowrap text-[9px] font-bold tracking-wide text-[#22d3a6]">JT</span>
+</div>
+<div class="relative mt-0.5 h-[38px] w-[38px] shrink-0">
+<svg aria-hidden="true" class="h-full w-full -rotate-90" viewbox="0 0 44 44">
+<defs>
+<lineargradient id="ringGradRateJt" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0%" stop-color="#7ef7cf"></stop>
+<stop offset="100%" stop-color="#12a37c"></stop>
+</lineargradient>
+<filter height="180%" id="ringBlurRateJt" width="180%" x="-40%" y="-40%">
+<fegaussianblur stddeviation="1.6"></fegaussianblur>
+</filter>
+</defs>
+<circle cx="22" cy="22" fill="none" r="17.5" stroke="#16355e" stroke-width="3.6"></circle>
+<circle cx="22" cy="22" fill="none" filter="url(#ringBlurRateJt)" opacity="0.28" r="17.5" stroke="#22d3a6" stroke-dasharray="93.46 109.96" stroke-linecap="round" stroke-width="3.6"></circle>
+<circle cx="22" cy="22" fill="none" r="17.5" stroke="url(#ringGradRateJt)" stroke-dasharray="93.46 109.96" stroke-linecap="round" stroke-width="3.6" style="filter: drop-shadow(0 0 2.4px rgba(34,211,166,0.85));"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center leading-none">
+<div class="whitespace-nowrap text-[13px] font-bold tabular-nums tracking-[0.02em] text-[#d6f8ff]">85<span class="ml-[1px] align-top text-[7px] font-semibold text-[#6f9dd0]">%</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-2 grid shrink-0 grid-cols-2 gap-2.5 text-[11px]">
+<div class="flex items-center justify-between rounded-md border border-[#183f70] bg-[#071933]/70 px-2 py-0.5">
+<span class="text-[#7ba6d4]">月度已交付产量</span>
+<span class="tabular-nums font-semibold text-white">345</span>
+</div>
+<div class="flex items-center justify-between rounded-md border border-[#183f70] bg-[#071933]/70 px-2 py-0.5">
+<span class="text-[#7ba6d4]">年度已交付产量</span>
+<span class="tabular-nums font-semibold text-white">345</span>
+</div>
+</div>
+<div class="group-content mt-2 flex min-h-0 shrink-0 flex-col px-2">
+<div class="group-head flex items-center justify-between text-[10px] tracking-wider text-[#4f7ba9]">
+<span>周产量 · 近7天</span>
+<div class="flex items-center gap-2">
+<div aria-label="周产量产线切换" class="flex items-center rounded-[4px] border border-[#1d4b82] bg-[#071933]/80 p-[2px]" role="group">
+<button aria-pressed="true" class="weekly-tab rounded-[3px] px-2 py-[2px] text-[10px] font-semibold tracking-wider transition-colors bg-[#5ef0ff]/20 text-[#bff2ff] shadow-[inset_0_0_10px_rgba(94,240,255,0.35)]" data-plant="oj" type="button">OJ</button>
+<button aria-pressed="false" class="weekly-tab rounded-[3px] px-2 py-[2px] text-[10px] font-semibold tracking-wider transition-colors text-[#6f9dd0] hover:text-[#9fd8ff]" data-plant="jt" type="button">JT</button>
+</div>
+<span>单位 台</span>
+</div>
+</div>
+<div class="h-[110px] min-h-[96px] w-full shrink-0" id="chart-weekly-output"></div>
+</div>
+<div class="group-box mt-2 flex min-h-0 flex-1 flex-col rounded-md border border-[#183f70] bg-[#071933]/80">
+<div class="group-head flex items-center gap-1.5">
+<span class="h-3 w-[3px] rounded-full bg-[#5ef0ff]"></span>
+<span class="text-[10px] font-semibold tracking-[0.16em] text-[#9fc9ee]">设备开动率</span>
+<span class="h-px flex-1 bg-gradient-to-r from-[#1c4375] to-transparent"></span>
+<span class="whitespace-nowrap text-[9px] tracking-wider text-[#4f7ba9]">单位 %</span>
+</div>
+<div class="group-content grid min-h-[96px] flex-1 grid-cols-1 grid-rows-2 gap-1.5 border-t border-[#123557]">
+<div class="relative flex min-h-0 flex-col overflow-hidden rounded-[6px] border border-[#1c4375] bg-[#0a2450]/40 px-2 pb-0.5 pt-1.5">
+<span class="absolute inset-y-0 left-0 w-[2px] bg-[#5ef0ff]/70"></span>
+<div class="mb-1 flex items-center justify-between gap-1.5 pb-1">
+<span class="flex items-baseline gap-1 leading-none">
+<span class="text-[9px] font-bold tracking-wider text-[#5ef0ff]">OJ</span>
+<span class="whitespace-nowrap text-[10px] tracking-wide text-[#6f9dd0]">设备开动率</span>
+</span>
+<span class="whitespace-nowrap text-[9px] tabular-nums tracking-wider text-[#4f7ba9]">单位 %</span>
+</div>
+<div class="min-h-0 w-full flex-1" id="chart-delivery-equipment"></div>
+</div>
+<div class="relative flex min-h-0 flex-col overflow-hidden rounded-[6px] border border-[#1c4375] bg-[#0a2450]/40 px-2 pb-0.5 pt-1.5">
+<span class="absolute inset-y-0 left-0 w-[2px] bg-[#22d3a6]/70"></span>
+<div class="mb-1 flex items-center justify-between gap-1.5 pb-1">
+<span class="flex items-baseline gap-1 leading-none">
+<span class="text-[9px] font-bold tracking-wider text-[#22d3a6]">JT</span>
+<span class="whitespace-nowrap text-[10px] tracking-wide text-[#6f9dd0]">设备开动率</span>
+</span>
+<span class="whitespace-nowrap text-[9px] tabular-nums tracking-wider text-[#4f7ba9]">单位 %</span>
+</div>
+<div class="min-h-0 w-full flex-1" id="chart-delivery-equipment-jt"></div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- ---------- 中列：3D 场景 / 核心指标 / 设备与停线 ---------- -->
+<div class="col-stack col-span-12 flex min-h-0 flex-col lg:col-span-6">
+<!-- 3D 生产场景模拟 -->
+<section class="rise relative flex min-h-[140px] flex-1 flex-col overflow-hidden rounded-[10px] border border-[#1c4375] bg-gradient-to-b from-[#0a2450]/85 to-[#04122a]/95 shadow-[inset_0_0_30px_rgba(24,86,180,0.25)]">
+<div class="card-head flex shrink-0 items-center justify-between border-b border-[#163a68]">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-[4px] bg-[#113a6e] text-[#5ef0ff]">
+<iconify-icon class="text-[13px]" icon="mdi:factory"></iconify-icon>
+</span>
+<h2 class="text-[13px] font-semibold tracking-[0.14em] text-[#bfe0ff]">总装车间</h2>
+</div>
+<div aria-hidden="true"></div>
+</div>
+<div class="group-content relative min-h-[112px] flex-1 overflow-hidden rounded-md border border-[#15406f] bg-[#04122a]">
+<svg aria-label="总装车间三维产线示意" class="h-full w-full" id="scene-svg" preserveaspectratio="xMidYMid meet" viewbox="0 0 800 300"></svg>
+</div>
+</section>
+<!-- 安全 + 团队（原核心指标区） -->
+<div class="grid h-[172px] shrink-0 grid-cols-1 gap-2.5 lg:grid-cols-2">
+<!-- 安全 Safety：电池日历 -->
+<section class="rise flex flex-col rounded-[10px] border border-[#1c4375] bg-gradient-to-b from-[#0a2450]/85 to-[#05122a]/90 shadow-[inset_0_0_26px_rgba(24,86,180,0.22)]">
+<div class="card-head flex shrink-0 items-center justify-between border-b border-[#163a68]">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-[4px] bg-[#113a6e] text-[#22d3a6]">
+<iconify-icon class="text-[13px]" icon="mdi:shield-check-outline"></iconify-icon>
+</span>
+<h2 class="text-[13px] font-semibold tracking-[0.14em] text-[#bfe0ff]">安全 · SAFETY</h2>
+</div>
+</div>
+<div class="flex min-h-0 flex-1 items-center gap-2.5">
+<div class="flex w-[86px] shrink-0 flex-col justify-center">
+<div class="mt-0.5 text-[21px] font-bold leading-none tabular-nums text-[#5ef0ff]">06/18</div>
+<div class="mt-0.5 text-[10px] text-[#4f7ba9]">2026</div>
+</div>
+<div class="min-w-0 flex-1">
+<div class="grid grid-cols-7 gap-1 text-center text-[9px] text-[#5c86bb]">
+<span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+</div>
+<div class="mt-1 grid grid-cols-7 gap-1" id="battery-calendar"></div>
+</div>
+</div>
+</section>
+<!-- 团队 Morale -->
+<section class="rise flex min-h-0 flex-col overflow-hidden rounded-[10px] border border-[#1c4375] bg-gradient-to-b from-[#0a2450]/85 to-[#05122a]/90 shadow-[inset_0_0_26px_rgba(24,86,180,0.22)]">
+<div class="card-head flex shrink-0 items-center justify-between border-b border-[#163a68]">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-[4px] bg-[#113a6e] text-[#9d7bff]">
+<iconify-icon class="text-[13px]" icon="mdi:account-group-outline"></iconify-icon>
+</span>
+<h2 class="text-[13px] font-semibold tracking-[0.14em] text-[#bfe0ff]">团队 · MORALE</h2>
+</div>
+<span class="text-[10px] tracking-widest text-[#4f7ba9]">在岗 1,892 人</span>
+</div>
+<div class="flex min-h-0 flex-1 items-stretch gap-2.5">
+<div class="flex w-[124px] shrink-0 flex-col justify-center gap-1.5">
+<div>
+<div class="text-[10px] text-[#6f9dd0]">应到人数</div>
+<div class="mt-0.5 flex items-center gap-1">
+<span class="grid h-4 w-4 place-items-center rounded-full border border-[#5ef0ff]/60 text-[9px] text-[#5ef0ff]">◦</span>
+<span class="text-[17px] font-bold tabular-nums text-white">1,920</span>
+</div>
+</div>
+<div>
+<div class="text-[10px] text-[#6f9dd0]">实到人数</div>
+<div class="mt-0.5 flex items-center gap-1">
+<span class="grid h-4 w-4 place-items-center rounded-full border border-[#5ef0ff]/60 text-[9px] text-[#5ef0ff]">◦</span>
+<span class="text-[17px] font-bold tabular-nums text-white">1,892</span>
+</div>
+</div>
+</div>
+<div class="group-box group-content flex min-w-0 flex-1 flex-col rounded-md border border-[#183f70] bg-[#071933]/60">
+<div class="group-head flex shrink-0 items-center justify-between">
+<span class="text-[11px] text-[#9dc2ea]">近7日出勤率趋势</span>
+<span class="text-[10px] text-[#4f7ba9]">单位 %</span>
+</div>
+<div class="h-[68px] min-h-[68px] w-full" id="chart-morale-mid"></div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- ---------- 右列：成本 / 质量 / 团队 ---------- -->
+<!-- 右列：上部「质量」加高，下部「单车缺陷数 / 宣传视频」用间距整体下移，使右列底边与左列、中列齐平 -->
+<div class="col-stack right-col col-span-12 flex min-h-0 flex-col lg:col-span-3">
+<!-- 质量 Quality：高度由内容自然决定（flex-none），不再收缩到剩余高度，避免内容溢出压到下一张卡 -->
+<section class="rise right-card flex flex-col rounded-[10px] border border-[#1c4375] bg-gradient-to-b from-[#0a2450]/85 to-[#05122a]/90 shadow-[inset_0_0_26px_rgba(24,86,180,0.22)]">
+<div class="card-head flex shrink-0 items-center justify-between border-b border-[#163a68]">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-[4px] bg-[#113a6e] text-[#5ef0ff]">
+<iconify-icon class="text-[13px]" icon="mdi:check-decagram-outline"></iconify-icon>
+</span>
+<h2 class="text-[13px] font-semibold tracking-[0.14em] text-[#bfe0ff]">质量 · QUALITY</h2>
+</div>
+<div class="flex items-center gap-2">
+<select aria-label="产线切换" class="cursor-pointer rounded-[4px] border border-[#1d4b82] bg-[#071933]/80 px-2 py-[3px] text-[10px] font-semibold tracking-wider text-[#8ff5e0] outline-none transition-colors hover:border-[#2a6bb0] focus:border-[#18e0c0]/70 [color-scheme:dark]" id="quality-line-select">
+<option class="bg-[#071933] text-[#cfe8ff]" selected="" value="platform">平台</option>
+<option class="bg-[#071933] text-[#cfe8ff]" value="t1x">T1X</option>
+<option class="bg-[#071933] text-[#cfe8ff]" value="t2x">T2X</option>
+</select>
+</div>
+</div>
+<div class="flex shrink-0 items-center gap-2.5 rounded-md border border-[#183f70] bg-[#071933]/80 p-2.5">
+<div class="relative grid h-[66px] w-[66px] shrink-0 place-items-center">
+<svg class="h-full w-full -rotate-90" viewbox="0 0 80 80">
+<circle cx="40" cy="40" fill="none" r="32" stroke="#123056" stroke-width="9"></circle>
+<circle cx="40" cy="40" fill="none" id="quality-drr-ring" pathlength="100" r="32" stroke="#22d3a6" stroke-dasharray="96 4" stroke-dashoffset="0" stroke-linecap="round" stroke-width="9"></circle>
+</svg>
+<span class="absolute text-[12px] font-bold tabular-nums text-[#22d3a6]" id="quality-drr-value">96%</span>
+</div>
+<div class="min-w-0 flex-1">
+<div class="text-[11px] text-[#9dc2ea]">实时整车(DRR)</div>
+<div class="mt-0.5 text-[17px] font-bold tabular-nums text-[#22d3a6]" id="quality-drr-actual">实际：96<span class="text-[10px]">%</span></div>
+<div class="mt-0.5 flex items-center gap-1 text-[10px] text-[#ff5c5c]" id="quality-drr-trend">日趋势<iconify-icon class="text-[11px]" icon="mdi:triangle-down"></iconify-icon>4%</div>
+</div>
+</div>
+<div class="hide-scrollbar mt-2 flex flex-none flex-col gap-1.5 text-[11px]" id="quality-ftq-list">
+<div class="quality-item flex items-center justify-between rounded-md border border-[#183f70] bg-[#071933]/60 px-2 py-0.5">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-full border border-[#22d3a6]/60 text-[#22d3a6]">
+<iconify-icon class="text-[11px]" icon="mdi:check"></iconify-icon>
+</span>
+<div class="leading-none">
+<div class="text-[#9dc2ea]">CP7 FTQ</div>
+<div class="quality-actual text-[10px] text-[#6f9dd0]">实际：96%</div>
+</div>
+</div>
+<span class="quality-trend flex items-center gap-0.5 text-[10px] text-[#ff5c5c]"><span class="quality-trend-label">日趋势</span><iconify-icon class="text-[11px]" icon="mdi:triangle-down"></iconify-icon><span class="quality-trend-value">2%</span></span>
+</div>
+<div class="quality-item flex items-center justify-between rounded-md border border-[#183f70] bg-[#071933]/60 px-2 py-0.5">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-full border border-[#22d3a6]/60 text-[#22d3a6]">
+<iconify-icon class="text-[11px]" icon="mdi:check"></iconify-icon>
+</span>
+<div class="leading-none">
+<div class="text-[#9dc2ea]">检测线 FTQ</div>
+<div class="quality-actual text-[10px] text-[#6f9dd0]">实际：96%</div>
+</div>
+</div>
+<span class="quality-trend flex items-center gap-0.5 text-[10px] text-[#ff5c5c]"><span class="quality-trend-label">日趋势</span><iconify-icon class="text-[11px]" icon="mdi:triangle-down"></iconify-icon><span class="quality-trend-value">2%</span></span>
+</div>
+<div class="quality-item flex items-center justify-between rounded-md border border-[#183f70] bg-[#071933]/60 px-2 py-0.5">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-full border border-[#22d3a6]/60 text-[#22d3a6]">
+<iconify-icon class="text-[11px]" icon="mdi:check"></iconify-icon>
+</span>
+<div class="leading-none">
+<div class="text-[#9dc2ea]">EOL FTQ</div>
+<div class="quality-actual text-[10px] text-[#6f9dd0]">实际：94%</div>
+</div>
+</div>
+<span class="quality-trend flex items-center gap-0.5 text-[10px] text-[#22d3a6]"><span class="quality-trend-label">日趋势</span><iconify-icon class="text-[11px]" icon="mdi:triangle-up"></iconify-icon><span class="quality-trend-value">4%</span></span>
+</div>
+<div class="quality-item flex items-center justify-between rounded-md border border-[#183f70] bg-[#071933]/60 px-2 py-0.5">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-full border border-[#22d3a6]/60 text-[#22d3a6]">
+<iconify-icon class="text-[11px]" icon="mdi:check"></iconify-icon>
+</span>
+<div class="leading-none">
+<div class="text-[#9dc2ea]">动态 FTQ</div>
+<div class="quality-actual text-[10px] text-[#6f9dd0]">实际：96%</div>
+</div>
+</div>
+<span class="quality-trend flex items-center gap-0.5 text-[10px] text-[#ff5c5c]"><span class="quality-trend-label">日趋势</span><iconify-icon class="text-[11px]" icon="mdi:triangle-down"></iconify-icon><span class="quality-trend-value">2%</span></span>
+</div>
+<div class="quality-item flex items-center justify-between rounded-md border border-[#183f70] bg-[#071933]/60 px-2 py-0.5">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-full border border-[#22d3a6]/60 text-[#22d3a6]">
+<iconify-icon class="text-[11px]" icon="mdi:check"></iconify-icon>
+</span>
+<div class="leading-none">
+<div class="text-[#9dc2ea]">淋雨 FTQ</div>
+<div class="quality-actual text-[10px] text-[#6f9dd0]">实际：100%</div>
+</div>
+</div>
+<span class="quality-trend flex items-center gap-0.5 text-[10px] text-[#22d3a6]"><span class="quality-trend-label">日趋势</span><iconify-icon class="text-[11px]" icon="mdi:triangle-up"></iconify-icon><span class="quality-trend-value">4%</span></span>
+</div>
+<div class="quality-item flex items-center justify-between rounded-md border border-[#183f70] bg-[#071933]/60 px-2 py-0.5">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-full border border-[#22d3a6]/60 text-[#22d3a6]">
+<iconify-icon class="text-[11px]" icon="mdi:check"></iconify-icon>
+</span>
+<div class="leading-none">
+<div class="text-[#9dc2ea]">CP8 FTQ</div>
+<div class="quality-actual text-[10px] text-[#6f9dd0]">实际：96%</div>
+</div>
+</div>
+<span class="quality-trend flex items-center gap-0.5 text-[10px] text-[#9dc2ea]"><span class="quality-trend-label">日趋势</span><span class="quality-trend-value">0%</span></span>
+</div>
+<div class="quality-item flex items-center justify-between rounded-md border border-[#183f70] bg-[#071933]/60 px-2 py-0.5">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-full border border-[#22d3a6]/60 text-[#22d3a6]">
+<iconify-icon class="text-[11px]" icon="mdi:check"></iconify-icon>
+</span>
+<div class="leading-none">
+<div class="text-[#9dc2ea]">CP9 FTQ</div>
+<div class="quality-actual text-[10px] text-[#6f9dd0]">实际：96%</div>
+</div>
+</div>
+<span class="quality-trend flex items-center gap-0.5 text-[10px] text-[#ff5c5c]"><span class="quality-trend-label">日趋势</span><iconify-icon class="text-[11px]" icon="mdi:triangle-down"></iconify-icon><span class="quality-trend-value">2%</span></span>
+</div>
+</div>
+</section>
+<!-- 质量：单车缺陷数（flex-none，各自占据独立文档流高度，互不重叠；mt-3 把它相对上方质量卡下推，消除底部留白） -->
+<section class="rise right-fill right-card flex flex-col overflow-hidden rounded-[10px] border border-[#1c4375] bg-gradient-to-b from-[#0a2450]/85 to-[#05122a]/90 shadow-[inset_0_0_26px_rgba(24,86,180,0.22)]">
+<div class="card-head flex shrink-0 items-center justify-between border-b border-[#163a68]">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-[4px] bg-[#113a6e] text-[#5ef0ff]">
+<iconify-icon class="text-[13px]" icon="mdi:car-wrench"></iconify-icon>
+</span>
+<h2 class="text-[13px] font-semibold tracking-[0.14em] text-[#bfe0ff]">单车缺陷数</h2>
+</div>
+<div class="flex items-center gap-2">
+<select aria-label="单车缺陷数产线切换" class="cursor-pointer rounded-[4px] border border-[#1d4b82] bg-[#071933]/80 px-2 py-[3px] text-[10px] font-semibold tracking-wider text-[#8ff5e0] outline-none transition-colors hover:border-[#2a6bb0] focus:border-[#18e0c0]/70 [color-scheme:dark]" id="defect-line-select">
+<option class="bg-[#071933] text-[#cfe8ff]" selected="" value="platform">平台</option>
+<option class="bg-[#071933] text-[#cfe8ff]" value="t1x">T1X</option>
+<option class="bg-[#071933] text-[#cfe8ff]" value="t2x">T2X</option>
+</select>
+</div>
+</div>
+<div class="group-content min-h-[128px] w-full flex-1" id="chart-quality-defect"></div>
+</section>
+<!-- 宣传视频：播放位占位（mt-4 下推，底部余量由右列 flex 分配） -->
+<section class="rise right-card flex flex-col rounded-[10px] border border-[#1c4375] bg-gradient-to-b from-[#0a2450]/85 to-[#05122a]/90 shadow-[inset_0_0_26px_rgba(24,86,180,0.22)]">
+<div class="card-head flex shrink-0 items-center justify-between border-b border-[#163a68]">
+<div class="flex items-center gap-2">
+<span class="grid h-5 w-5 place-items-center rounded-[4px] bg-[#113a6e] text-[#5ef0ff]">
+<iconify-icon class="text-[13px]" icon="mdi:movie-open-play-outline"></iconify-icon>
+</span>
+<h2 class="text-[13px] font-semibold tracking-[0.14em] text-[#bfe0ff]">宣传视频</h2>
+</div>
+<span class="flex items-center gap-1 text-[10px] tracking-widest text-[#4f7ba9]">
+<span class="blink h-1.5 w-1.5 rounded-full bg-[#5ef0ff]"></span>播放位 · 待接入
+            </span>
+</div>
+<div class="group-content relative h-[164px] w-full shrink-0 overflow-hidden rounded-md border border-[#183f70] bg-gradient-to-br from-[#041024] via-[#08203f] to-[#02091a] shadow-[inset_0_0_30px_rgba(30,110,210,0.28)]" id="quality-video-frame">
+<!-- 网格 + 扫描线纹理 -->
+<div class="video-scan pointer-events-none absolute inset-0 opacity-60" style="background-image: linear-gradient(rgba(94,240,255,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(94,240,255,0.08) 1px, transparent 1px); background-size: 100% 24px, 24px 100%;"></div>
+<div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(94,240,255,0.14),transparent_65%)]"></div>
+<!-- 四角装饰框 -->
+<span class="pointer-events-none absolute left-1.5 top-1.5 h-3 w-3 border-l border-t border-[#5ef0ff]/70"></span>
+<span class="pointer-events-none absolute right-1.5 top-1.5 h-3 w-3 border-r border-t border-[#5ef0ff]/70"></span>
+<span class="pointer-events-none absolute bottom-1.5 left-1.5 h-3 w-3 border-b border-l border-[#5ef0ff]/70"></span>
+<span class="pointer-events-none absolute bottom-1.5 right-1.5 h-3 w-3 border-b border-r border-[#5ef0ff]/70"></span>
+<!-- 播放器占位主体 -->
+<div class="absolute inset-0 flex flex-col items-center justify-center gap-2 pb-6 px-3 text-center">
+<button aria-label="宣传视频播放位（待接入视频源）" class="video-breathe grid h-12 w-12 place-items-center rounded-full border border-[#5ef0ff]/70 bg-[#0a2a55]/80 text-[#5ef0ff] shadow-[0_0_22px_rgba(94,240,255,0.45)]" type="button">
+<iconify-icon class="text-[26px]" icon="mdi:play"></iconify-icon>
+</button>
+<div class="leading-tight">
+<div class="text-[12px] font-semibold tracking-[0.18em] text-[#bfe0ff]">宣传视频</div>
+<div class="mt-0.5 text-[9px] tracking-[0.14em] text-[#5c86bb]">PROMOTIONAL VIDEO</div>
+</div>
+</div>
+<!-- 底部时间轴占位 -->
+<div class="pointer-events-none absolute inset-x-2 bottom-1.5 flex items-center gap-1.5">
+<span class="grid h-4 w-4 place-items-center rounded-full border border-[#1c4375] bg-[#061530]/80 text-[#5c86bb]">
+<iconify-icon class="text-[9px]" icon="mdi:play"></iconify-icon>
+</span>
+<span class="h-[2px] flex-1 rounded-full bg-gradient-to-r from-[#5ef0ff]/70 via-[#1d6fd6]/60 to-transparent"></span>
+<span class="text-[9px] tabular-nums tracking-widest text-[#4f7ba9]">00:00 / --:--</span>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+<script>
+/* ===================== 时钟与刷新倒计时 ===================== */
+(function () {
+  var WEEK = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  var timeEl = document.getElementById('clock-time');
+  var dateEl = document.getElementById('clock-date');
+  var cdEl = document.getElementById('countdown');
+  var left = 60;
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function tick() {
+    var d = new Date();
+    var hh = pad(d.getHours()), mm = pad(d.getMinutes()), ss = pad(d.getSeconds());
+    timeEl.textContent = hh + ':' + mm + ':' + ss;
+    dateEl.textContent = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + WEEK[d.getDay()];
+    cdEl.textContent = left;
+    left = left <= 1 ? 60 : left - 1;
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+
+/* ===================== 3D 生产场景（等距投影） ===================== */
+(function () {
+  var svg = document.getElementById('scene-svg');
+  var OX = 400, OY = 172, KX = 0.78, KY = 0.39;
+
+  function px(x, y) { return (OX + (x - y) * KX).toFixed(1); }
+  function py(x, y, z) { return (OY + (x + y) * KY - z).toFixed(1); }
+
+  function poly(points, fill, opt) {
+    opt = opt || {};
+    var attrs = 'points="' + points.join(' ') + '" fill="' + fill + '"';
+    if (opt.stroke) { attrs += ' stroke="' + opt.stroke + '" stroke-width="' + (opt.sw || 1) + '"'; }
+    if (opt.opacity !== undefined) { attrs += ' opacity="' + opt.opacity + '"'; }
+    var inner = opt.anim ? '<animate attributeName="opacity" values="' + opt.anim + '" dur="2.2s" repeatCount="indefinite" />' : '';
+    return '<polygon ' + attrs + '>' + inner + '</polygon>';
+  }
+
+  /* 等距立方体：cx/cy 为底面中心，L 沿 x、W 沿 y、H 为高度，z0 为底面高度 */
+  function box(cx, cy, L, W, H, z0, palette, anim) {
+    var x1 = cx - L / 2, x2 = cx + L / 2, y1 = cy - W / 2, y2 = cy + W / 2, z1 = z0 + H;
+    var top = [
+      px(x1, y1) + ',' + py(x1, y1, z1),
+      px(x2, y1) + ',' + py(x2, y1, z1),
+      px(x2, y2) + ',' + py(x2, y2, z1),
+      px(x1, y2) + ',' + py(x1, y2, z1)
+    ];
+    var faceX = [
+      px(x2, y1) + ',' + py(x2, y1, z1),
+      px(x2, y2) + ',' + py(x2, y2, z1),
+      px(x2, y2) + ',' + py(x2, y2, z0),
+      px(x2, y1) + ',' + py(x2, y1, z0)
+    ];
+    var faceY = [
+      px(x1, y2) + ',' + py(x1, y2, z1),
+      px(x2, y2) + ',' + py(x2, y2, z1),
+      px(x2, y2) + ',' + py(x2, y2, z0),
+      px(x1, y2) + ',' + py(x1, y2, z0)
+    ];
+    return poly(faceX, palette[1]) + poly(faceY, palette[2]) +
+      poly(top, palette[0], { stroke: 'rgba(120,200,255,0.4)', anim: anim });
+  }
+
+  var BASE = ['#123a6b', '#0f3159', '#0b2547'];
+  var WHITE_CAR = ['#dbe7f5', '#a8bdd6', '#7f97b5'];
+  var BLUE_CAR = ['#3f7fd0', '#2f63a8', '#22497d'];
+  var HOT_CAR = ['#5ef0ff', '#2fb6d8', '#1d86a8'];
+
+  var lines = [
+    { y: -110, cars: 6 },
+    { y: 40, cars: 6 },
+    { y: 190, cars: 6 }
+  ];
+
+  var html = '';
+
+  /* 地面网格（范围与画布对齐，避免线端超出视口） */
+  for (var gx = -240; gx <= 240; gx += 60) {
+    html += '<line x1="' + px(gx, -180) + '" y1="' + py(gx, -180, 0) + '" x2="' + px(gx, 240) + '" y2="' + py(gx, 240, 0) + '" stroke="rgba(40,100,180,0.22)" stroke-width="1" />';
+  }
+  for (var gy = -180; gy <= 240; gy += 60) {
+    html += '<line x1="' + px(-240, gy) + '" y1="' + py(-240, gy, 0) + '" x2="' + px(240, gy) + '" y2="' + py(240, gy, 0) + '" stroke="rgba(40,100,180,0.22)" stroke-width="1" />';
+  }
+
+  lines.forEach(function (line, li) {
+    /* 输送链基座 */
+    html += box(0, line.y, 470, 110, 8, 0, BASE);
+
+    /* 轨面流动线 */
+    var yA = line.y - 42, yB = line.y + 42;
+    [yA, yB].forEach(function (yy) {
+      html += '<line class="flow" x1="' + px(-230, yy) + '" y1="' + py(-230, yy, 9) + '" x2="' + px(230, yy) + '" y2="' + py(230, yy, 9) + '" stroke="rgba(94,240,255,0.45)" stroke-width="2" stroke-dasharray="14 18" />';
+    });
+
+    /* 在制车身 */
+    for (var i = 0; i < line.cars; i++) {
+      var cx = -165 + i * 66;
+      var isHot = (li === 1 && i === 3);
+      var palette = isHot ? HOT_CAR : (i % 2 === 0 ? WHITE_CAR : BLUE_CAR);
+      var anim = isHot ? '1;0.5;1' : undefined;
+      html += box(cx, line.y, 62, 44, 24, 8, palette, anim);
+    }
+
+    /* 工位立柱与状态灯（置于线体两端中线，避免超出画布顶部） */
+    [-215, 215].forEach(function (sx) {
+      html += box(sx, line.y, 16, 16, 34, 0, ['#1d5aa0', '#17406f', '#12365f']);
+      html += '<circle cx="' + px(sx, line.y) + '" cy="' + py(sx, line.y, 38) + '" r="3.5" fill="#5ef0ff" opacity="0.85"><animate attributeName="opacity" values="1;0.2;1" dur="1.8s" repeatCount="indefinite" /></circle>';
+    });
+  });
+
+  svg.innerHTML = html;
+})();
+
+/* ===================== 图表：设备开动率 / 周产量 / 出入勤与质量 ===================== */
+(function () {
+  var axisCommon = {
+    axisLine: { lineStyle: { color: '#1d4479' } },
+    axisTick: { show: false },
+    axisLabel: { color: '#8fb8e0', fontSize: 10 }
+  };
+  var tooltipCommon = {
+    backgroundColor: 'rgba(6,22,48,0.95)',
+    borderColor: '#1e4783',
+    textStyle: { color: '#cfe6ff', fontSize: 12 }
+  };
+
+  /* 各图表主高度全部由布局显式给定（固定值），此处仅记录兜底最小值，保证任何情况下都可读 */
+  var CHART_MIN_H = {
+    'chart-delivery-equipment': 72,
+    'chart-delivery-equipment-jt': 72,
+    'chart-weekly-output': 106,
+    'chart-morale-mid': 68,
+    'chart-quality-defect': 148
+  };
+  function enforceChartMinHeights() {
+    Object.keys(CHART_MIN_H).forEach(function (id) {
+      var host = document.getElementById(id);
+      if (!host) { return; }
+      /* 兜底最小值只提高高度，绝不写回更小值：修改 CSS 后多余的行内 min-height 会与 class 冲突并压缩图表 */
+      var minH = host.style.minHeight ? parseFloat(host.style.minHeight) : 0;
+      if (host.offsetHeight < CHART_MIN_H[id] || minH < CHART_MIN_H[id]) {
+        host.style.minHeight = CHART_MIN_H[id] + 'px';
+      }
+    });
+  }
+
+  /* 安全模块：电池日历（日期格仅保留绿色「正常」状态，不再使用红色异常标记） */
+  (function () {
+    var levelCls = {
+      normal: 'bg-[#16a37a] text-white',
+      muted: 'bg-[#123156] text-[#7aa5d2]',
+      empty: 'bg-transparent text-[#3d6392]'
+    };
+    var levelText = { normal: '正常' };
+    /* 2026-06：1 日为周一，共 30 天 */
+    var offset = 0;
+    var days = 30;
+    var TODAY = 18;
+    var html = '';
+    for (var i = 0; i < offset; i++) {
+      html += '<div class="h-[13px] rounded-[3px]"></div>';
+    }
+    for (var d = 1; d <= days; d++) {
+      var level = d > TODAY ? 'empty' : 'normal';
+      var today = d === TODAY ? ' ring-1 ring-[#8fe9c0]' : '';
+      var label = d + '日' + (levelText[level] ? ' · ' + levelText[level] : '');
+      html += '<div class="grid h-[13px] place-items-center rounded-[3px] text-[10px] font-semibold tabular-nums cursor-default' +
+        ' ' + levelCls[level] + today + '" title="' + label + '">' + d + '</div>';
+    }
+    /* 补足整行空格，保持 5×7 矩形网格与原有视觉一致 */
+    var tail = (7 - ((offset + days) % 7)) % 7;
+    for (var t = 0; t < tail; t++) {
+      html += '<div class="h-[13px] rounded-[3px]"></div>';
+    }
+    var box = document.getElementById('battery-calendar');
+    if (box) { box.innerHTML = html; }
+  })();
+
+  /* 交付模块：OJ / JT 设备开动率（同组样式，仅强调色不同） */
+  function equipBarOption(values, accent) {
+    var ACCENT = accent || { top: '#5ef0ff', mid: '#37b6f0', bottom: '#1a37a8', line: 'rgba(94,240,255,0.5)', glow: 'rgba(94,240,255,0.35)', label: '#bff2ff' };
+    return {
+      animationDuration: 900,
+      animationEasing: 'cubicOut',
+      grid: { left: 26, right: 8, top: 12, bottom: 18, containLabel: false },
+      tooltip: Object.assign({
+        trigger: 'axis',
+        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(94,240,255,0.08)' } },
+        backgroundColor: 'rgba(6,22,48,0.96)',
+        borderColor: '#1e4783',
+        borderWidth: 1,
+        padding: [6, 10],
+        textStyle: { color: '#cfe6ff', fontSize: 12 },
+        valueFormatter: function (v) { return v + ' %'; }
+      }, tooltipCommon),
+      xAxis: Object.assign({
+        type: 'category',
+        data: ['前装1', '前装2', '前装3', '前装4', '后装1', '后装2', '底盘1', '底盘2', '四门'],
+        axisLabel: { color: '#7fa8d4', fontSize: 8, interval: 0, margin: 3 },
+        axisLine: { lineStyle: { color: 'rgba(40,90,160,0.45)' } }
+      }, axisCommon),
+      yAxis: {
+        type: 'value',
+        min: 70,
+        max: 100,
+        interval: 10,
+        name: '%',
+        nameTextStyle: { color: '#3f6ea6', fontSize: 9, padding: [0, 0, 2, -6] },
+        splitLine: { lineStyle: { color: 'rgba(40,90,160,0.22)', type: 'dashed' } },
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { color: '#5c86bb', fontSize: 9, formatter: '{value}' }
+      },
+      series: [{
+        type: 'bar',
+        barWidth: 11,
+        barGap: '30%',
+        z: 3,
+        itemStyle: {
+          borderRadius: [4, 4, 0, 0],
+          borderColor: ACCENT.line,
+          borderWidth: 1,
+          shadowBlur: 10,
+          shadowColor: ACCENT.glow,
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: ACCENT.top },
+            { offset: 0.55, color: ACCENT.mid },
+            { offset: 1, color: ACCENT.bottom }
+          ])
+        },
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 16,
+            shadowColor: ACCENT.glow
+          }
+        },
+        label: {
+          show: true,
+          position: 'top',
+          color: ACCENT.label,
+          fontSize: 9,
+          fontWeight: 600,
+          distance: 2
+        },
+        markLine: {
+          silent: true,
+          symbol: 'none',
+          label: { show: false },
+          lineStyle: { color: 'rgba(94,240,255,0.32)', type: 'dashed', width: 1 },
+          data: [{ type: 'average' }]
+        },
+        data: values
+      }]
+    };
+  }
+
+  var OJ_EQUIP_STYLE = { top: '#5ef0ff', mid: '#37b6f0', bottom: '#1a37a8', line: 'rgba(94,240,255,0.5)', glow: 'rgba(94,240,255,0.35)', label: '#bff2ff' };
+  var JT_EQUIP_STYLE = { top: '#7ef7d0', mid: '#22d3a6', bottom: '#136f7a', line: 'rgba(34,211,166,0.5)', glow: 'rgba(34,211,166,0.32)', label: '#c6fbe8' };
+
+  var deliveryEquip = echarts.init(document.getElementById('chart-delivery-equipment'));
+  deliveryEquip.setOption(equipBarOption([92, 88, 90, 85, 87, 84, 91, 86, 89], OJ_EQUIP_STYLE));
+
+  /* 交付模块：JT 设备开动率 */
+  var deliveryEquipJt = echarts.init(document.getElementById('chart-delivery-equipment-jt'));
+  deliveryEquipJt.setOption(equipBarOption([86, 82, 84, 79, 81, 78, 85, 80, 83], JT_EQUIP_STYLE));
+
+  /* 交付模块：周产量 · 近7天（OJ / JT 切换） */
+  var WEEK_DAYS = ['10-06', '10-07', '10-08', '10-09', '10-10', '10-11', '10-12'];
+  var WEEK_PLANTS = {
+    oj: [186, 202, 194, 210, 198, 205, 188],
+    jt: [152, 168, 161, 175, 166, 172, 158]
+  };
+  var weeklyOutput = echarts.init(document.getElementById('chart-weekly-output'));
+  weeklyOutput.setOption({
+    grid: { left: 30, right: 8, top: 14, bottom: 20 },
+    tooltip: Object.assign({ trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: function (v) { return v + ' 台'; } }, tooltipCommon),
+    xAxis: Object.assign({
+      type: 'category',
+      data: WEEK_DAYS,
+      axisLabel: { color: '#8fb8e0', fontSize: 9, interval: 0 }
+    }, axisCommon),
+    yAxis: {
+      type: 'value',
+      splitLine: { lineStyle: { color: 'rgba(40,90,160,0.25)' } },
+      axisLabel: { color: '#5c86bb', fontSize: 9 }
+    },
+    series: [{
+      name: '周产量',
+      type: 'bar',
+      barWidth: 14,
+      itemStyle: {
+        borderRadius: [3, 3, 0, 0],
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: '#5ef0ff' },
+          { offset: 1, color: '#1d6fd6' }
+        ])
+      },
+      label: { show: true, position: 'top', color: '#9fd8ff', fontSize: 9 },
+      data: WEEK_PLANTS.oj
+    }]
+  });
+
+  (function () {
+    var TABS = document.querySelectorAll('.weekly-tab');
+    if (!TABS.length) { return; }
+
+    var ON = ['bg-[#5ef0ff]/20', 'text-[#bff2ff]', 'shadow-[inset_0_0_10px_rgba(94,240,255,0.35)]'];
+    var OFF = ['text-[#6f9dd0]', 'hover:text-[#9fd8ff]'];
+
+    function apply(plant) {
+      var data = WEEK_PLANTS[plant];
+      if (!data) { return; }
+      weeklyOutput.setOption({ series: [{ data: data }] });
+
+      for (var i = 0; i < TABS.length; i++) {
+        var isOn = TABS[i].getAttribute('data-plant') === plant;
+        for (var k = 0; k < ON.length; k++) { TABS[i].classList.toggle(ON[k], isOn); }
+        for (var o = 0; o < OFF.length; o++) { TABS[i].classList.toggle(OFF[o], !isOn); }
+        TABS[i].setAttribute('aria-pressed', isOn ? 'true' : 'false');
+      }
+    }
+
+    for (var i = 0; i < TABS.length; i++) {
+      TABS[i].addEventListener('click', function () {
+        apply(this.getAttribute('data-plant'));
+      });
+    }
+  })();
+
+  /* 团队：近7日出勤率趋势（中间列） */
+  var moraleMid = echarts.init(document.getElementById('chart-morale-mid'));
+  moraleMid.setOption({
+    grid: { left: 24, right: 8, top: 20, bottom: 18 },
+    tooltip: Object.assign({ trigger: 'axis', valueFormatter: function (v) { return v + ' %'; } }, tooltipCommon),
+    xAxis: Object.assign({
+      type: 'category',
+      boundaryGap: false,
+      data: ['06', '07', '08', '09', '10', '11', '12']
+    }, axisCommon),
+    yAxis: {
+      type: 'value',
+      min: 80,
+      max: 100,
+      splitLine: { lineStyle: { color: 'rgba(40,90,160,0.25)' } },
+      axisLabel: { color: '#5c86bb', fontSize: 9, margin: 2, formatter: '{value}%' }
+    },
+    series: [{
+      type: 'line',
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 5,
+      lineStyle: { width: 2, color: '#5ef0ff' },
+      itemStyle: { color: '#5ef0ff' },
+      label: { show: true, position: 'top', distance: 2, color: '#9fd8ff', fontSize: 9, formatter: '{c}%' },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: 'rgba(94,240,255,0.4)' },
+          { offset: 1, color: 'rgba(94,240,255,0)' }
+        ])
+      },
+      data: [92, 96, 97, 88, 84, 88, 85]
+    }]
+  });
+
+  /* 质量：单车缺陷数（近7日，单位 个/台） */
+  var qualityDefect = echarts.init(document.getElementById('chart-quality-defect'));
+  qualityDefect.setOption({
+    grid: { left: 28, right: 8, top: 24, bottom: 18 },
+    tooltip: Object.assign({
+      trigger: 'axis',
+      valueFormatter: function (v) { return v + ' 个/台'; }
+    }, tooltipCommon),
+    xAxis: Object.assign({
+      type: 'category',
+      boundaryGap: false,
+      data: ['06', '07', '08', '09', '10', '11', '12']
+    }, axisCommon),
+    yAxis: {
+      type: 'value',
+      min: 0,
+      max: 100,
+      interval: 20,
+      splitLine: { lineStyle: { color: 'rgba(40,90,160,0.25)' } },
+      axisLabel: { color: '#5c86bb', fontSize: 9 }
+    },
+    series: [{
+      name: '单车缺陷数',
+      type: 'line',
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 5,
+      lineStyle: { width: 2, color: '#5ef0ff' },
+      itemStyle: { color: '#5ef0ff' },
+      label: { show: true, position: 'top', distance: 2, color: '#9fd8ff', fontSize: 9 },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: 'rgba(94,240,255,0.42)' },
+          { offset: 1, color: 'rgba(94,240,255,0)' }
+        ])
+      },
+      data: [22, 21, 40, 58, 56, 52, 78]
+    }]
+  });
+
+  /* ===================== 质量模块：产线切换（平台 / T1X / T2X） ===================== */
+  (function () {
+    var select = document.getElementById('quality-line-select');
+    if (!select) { return; }
+
+    var LINES = {
+      /* 平台：默认档，沿用原 OJ（bj）数据 */
+      platform: {
+        drr: { value: 96, trend: { dir: 'down', amount: 4 } },
+        items: [
+          { actual: 96, dir: 'down', amount: 2 },
+          { actual: 96, dir: 'down', amount: 2 },
+          { actual: 94, dir: 'up', amount: 4 },
+          { actual: 96, dir: 'down', amount: 2 },
+          { actual: 100, dir: 'up', amount: 4 },
+          { actual: 96, dir: 'flat', amount: 0 },
+          { actual: 96, dir: 'down', amount: 2 }
+        ],
+        defect: [22, 21, 40, 58, 56, 52, 78]
+      },
+      /* T1X：暂无真实数据，临时复用原 JT（bl）数据 */
+      t1x: {
+        drr: { value: 89, trend: { dir: 'up', amount: 3 } },
+        items: [
+          { actual: 89, dir: 'up', amount: 3 },
+          { actual: 91, dir: 'down', amount: 1 },
+          { actual: 87, dir: 'down', amount: 3 },
+          { actual: 92, dir: 'up', amount: 2 },
+          { actual: 97, dir: 'down', amount: 2 },
+          { actual: 90, dir: 'up', amount: 1 },
+          { actual: 88, dir: 'down', amount: 4 }
+        ],
+        defect: [41, 46, 38, 52, 61, 47, 55]
+      },
+      /* T2X：暂无真实数据，临时复用原 OJ（bj）平台数据 */
+      t2x: {
+        drr: { value: 96, trend: { dir: 'down', amount: 4 } },
+        items: [
+          { actual: 96, dir: 'down', amount: 2 },
+          { actual: 96, dir: 'down', amount: 2 },
+          { actual: 94, dir: 'up', amount: 4 },
+          { actual: 96, dir: 'down', amount: 2 },
+          { actual: 100, dir: 'up', amount: 4 },
+          { actual: 96, dir: 'flat', amount: 0 },
+          { actual: 96, dir: 'down', amount: 2 }
+        ],
+        defect: [22, 21, 40, 58, 56, 52, 78]
+      }
+    };
+
+    var ring = document.getElementById('quality-drr-ring');
+    var drrValue = document.getElementById('quality-drr-value');
+    var drrActual = document.getElementById('quality-drr-actual');
+    var drrTrend = document.getElementById('quality-drr-trend');
+    var itemEls = document.querySelectorAll('#quality-ftq-list .quality-item');
+
+    function trendHtml(trend) {
+      var html = '日趋势';
+      if (trend.dir === 'up') {
+        html += '<iconify-icon icon="mdi:triangle-up" class="text-[11px]"></iconify-icon>';
+      } else if (trend.dir === 'down') {
+        html += '<iconify-icon icon="mdi:triangle-down" class="text-[11px]"></iconify-icon>';
+      }
+      return html + trend.amount + '%';
+    }
+
+    function apply(key) {
+      var data = LINES[key];
+      if (!data) { return; }
+
+      /* 顶部 DRR 圆环与数值 */
+      var color = data.drr.value >= 90 ? '#22d3a6' : '#ffb020';
+      if (ring) {
+        ring.setAttribute('stroke', color);
+        ring.setAttribute('stroke-dasharray', data.drr.value + ' ' + (100 - data.drr.value));
+      }
+      if (drrValue) {
+        drrValue.textContent = data.drr.value + '%';
+        drrValue.classList.toggle('text-[#22d3a6]', data.drr.value >= 90);
+        drrValue.classList.toggle('text-[#ffb020]', data.drr.value < 90);
+      }
+      if (drrActual) {
+        drrActual.innerHTML = '实际：' + data.drr.value + '<span class="text-[10px]">%</span>';
+        drrActual.classList.toggle('text-[#22d3a6]', data.drr.value >= 90);
+        drrActual.classList.toggle('text-[#ffb020]', data.drr.value < 90);
+      }
+      if (drrTrend) {
+        drrTrend.innerHTML = trendHtml(data.drr.trend);
+        drrTrend.classList.toggle('text-[#ff5c5c]', data.drr.trend.dir === 'down');
+        drrTrend.classList.toggle('text-[#22d3a6]', data.drr.trend.dir === 'up');
+        drrTrend.classList.toggle('text-[#9dc2ea]', data.drr.trend.dir === 'flat');
+      }
+
+      /* FTQ 清单 */
+      for (var i = 0; i < itemEls.length; i++) {
+        var item = LINES[key].items[i];
+        if (!item) { continue; }
+        var actualEl = itemEls[i].querySelector('.quality-actual');
+        var trendEl = itemEls[i].querySelector('.quality-trend');
+        if (actualEl) { actualEl.textContent = '实际：' + item.actual + '%'; }
+        if (trendEl) {
+          trendEl.innerHTML = trendHtml(item);
+          trendEl.classList.toggle('text-[#ff5c5c]', item.dir === 'down');
+          trendEl.classList.toggle('text-[#22d3a6]', item.dir === 'up');
+          trendEl.classList.toggle('text-[#9dc2ea]', item.dir === 'flat');
+        }
+      }
+
+      /* 图表同步 */
+      if (window.__qualityCharts) {
+        window.__qualityCharts.defect.setOption({ series: [{ data: data.defect }] });
+      }
+    }
+
+    window.__qualityCharts = { defect: qualityDefect };
+
+    /* 右列余量分配已改为纯 CSS：三张卡等间距排布，仅「单车缺陷数」卡 flex-grow 吸收余量，
+       图表容器 flex-1 自适应高度，三列底边靠主体区 min-height 对齐，不再依赖 JS 读写尺寸。
+       这里只在容器尺寸变化后触发一次 ECharts resize，保证图表随纯 CSS 布局自适应、不裁切。 */
+    window.__layoutRightColumn = function () { qualityDefect.resize(); };
+
+    select.addEventListener('change', function () {
+      apply(this.value);
+    });
+
+    /* 默认档位：平台 */
+    apply(select.value);
+  })();
+
+  /* ===================== 单车缺陷数：产线切换（平台 / T1X / T2X） ===================== */
+  /* defectLineData 复用质量模块 LINES 的数据口径（各档 defect 与 LINES 对应档一致）；
+     其中 T1X / T2X 在 LINES 中标注为「暂无真实数据」，此处同样沿用该占位数据，
+     后续替换为真实缺陷数即可。默认「平台」档保持原有真实数据不变。 */
+  (function () {
+    var select = document.getElementById('defect-line-select');
+    if (!select) { return; }
+    if (!window.__qualityCharts || !window.__qualityCharts.defect) { return; }
+
+    var defectLineData = {
+      /* 平台：默认档，保持原有真实数据不变 */
+      platform: [22, 21, 40, 58, 56, 52, 78],
+      /* T1X：暂无真实数据，待替换的占位值（与质量模块 LINES.t1x.defect 一致） */
+      t1x: [41, 46, 38, 52, 61, 47, 55],
+      /* T2X：暂无真实数据，待替换的占位值（与质量模块 LINES.t2x.defect 一致） */
+      t2x: [22, 21, 40, 58, 56, 52, 78]
+    };
+
+    select.addEventListener('change', function () {
+      var data = defectLineData[this.value];
+      if (!data) { return; }
+      window.__qualityCharts.defect.setOption({ series: [{ data: data }] });
+    });
+  })();
+
+  window.addEventListener('resize', function () {
+    enforceChartMinHeights();
+    deliveryEquip.resize();
+    deliveryEquipJt.resize();
+    weeklyOutput.resize();
+    moraleMid.resize();
+    qualityDefect.resize();
+    if (window.__layoutRightColumn) { window.__layoutRightColumn(); }
+  });
+
+  function resizeAllCharts() { enforceChartMinHeights(); deliveryEquip.resize(); deliveryEquipJt.resize(); weeklyOutput.resize(); moraleMid.resize(); qualityDefect.resize(); if (window.__layoutRightColumn) { window.__layoutRightColumn(); } }
+
+  if (window.requestAnimationFrame) {
+    requestAnimationFrame(function () { resizeAllCharts(); });
+  } else {
+    setTimeout(resizeAllCharts, 0);
+  }
+  window.addEventListener('load', resizeAllCharts);
+  if (window.ResizeObserver) {
+    var chartResizeFrame = 0;
+    var chartResizeObserver = new ResizeObserver(function () {
+      if (chartResizeFrame) { return; }
+      chartResizeFrame = requestAnimationFrame(function () {
+        chartResizeFrame = 0;
+        resizeAllCharts();
+      });
+    });
+    chartResizeObserver.observe(document.body);
+  }
+})();
+
+</script>
+</body>
+</html>
